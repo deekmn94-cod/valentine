@@ -179,13 +179,17 @@ img2.src = 'ooo.png'; // ຮູບເບື້ອງຂວາ
 
 
     window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        hearts = [];
-        currentGrowth = 0;
-        treeFullyGrown = false;
-    });
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    // ປັບຄ່າຕົວປ່ຽນໃໝ່ໃຫ້ສົມສ່ວນກັບໜ້າຈໍທີ່ປ່ຽນໄປ
+    maxGrowth = canvas.height * 0.25; 
+    currentGrowth = 0; 
+    hearts = []; 
+    treeFullyGrown = false;
+});
 </script>
 
 </body>
 </html>
+

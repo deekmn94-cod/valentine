@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Valentine Tree of Love</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            /* ใส่พื้นหลังเองได้ที่นี่ */
+            background: #fff0f5; 
+            background-image: radial-gradient(circle, #ffdee9 0%, #b5fffc 100%);
+        }
+
+        canvas {
+            display: block;
+        }
+
+        .ground {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            height: 40px;
+            background-color: #ffb6c1; /* พื้นดินสีชมพูเรียบๆ */
+            z-index: 10;
+        }
+    </style>
+</head>
+<body>
+
+<div class="ground"></div>
+<canvas id="treeCanvas"></canvas>
+
+<script>
+    const canvas = document.getElementById('treeCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    let hearts = [];
+    let treeFullyGrown = false;
+    let maxGrowth = 120;
+    let currentGrowth = 0;
+
+    class Heart {
+        constructor(x, y, angle) {
+            this.x = x;
+            this.y = y;
+            this.attachX = x; // จุดที่ติดกับกิ่ง
+            this.attachY = y;
+            this.size = Math.random() * 0.6 + 0.4;
+            this.opacity = 1;
+            this.state = 'attached'; // attached, falling, fading
+            this.velX = (Math.random() - 0.5) * 1.5;
+            this.velY = Math.random() * 1 + 0.5;
+            this.rotation = Math.random() * Math.PI * 2;
+        }
+
+        update() {
+            if (this.state === 'falling') {
+                this.x += this.velX;
+                this.y += this.velY;
+                this.rotation += 0.05;
+                if (this.y >= canvas.height - 45) {
+                    this.y = canvas.height - 45;
+                    this.state = 'fading';
+                }
+            } else if (this.state === 'fading') {
+                this.opacity -= 0.01; // ค่อยๆ จางหายไป
+            }
+        }
+
+        draw() {
+            if (this.opacity <= 0) return;
+            
+            ctx.save();
+            ctx.translate(this.x, this.y);
+            ctx.rotate(this.rotation);
+            ctx.scale(this.size, this.size);
+            ctx.beginPath();
+            ctx.moveTo(0, 0);
+            ctx.bezierCurveTo(-5, -5, -10, 5, 0, 12);
+            ctx.bezierCurveTo(10, 5, 5, -5, 0, 0);
+            ctx.fillStyle = `rgba(255, 50, 100, ${this.opacity})`;
+            ctx.fill();
+            ctx.restore();
+        }
+    }
+
+    function drawBranch(x, y, len, angle, thickness) {
+        let endX = x + Math.sin(angle) * len;
+        let endY = y - Math.cos(angle) * len;
+
+        ctx.beginPath();
+        ctx.lineCap = 'round';
+        ctx.strokeStyle = "#00000"; // ต้นไม้สีเขียวเข้ม
+        ctx.lineWidth = thickness;
+        ctx.moveTo(x, y);
+        ctx.lineTo(endX, endY);
+        ctx.stroke();
+
+        if (len < 10) {
+            // สร้างหัวใจที่ปลายกิ่งถ้ายังไม่มี
+            if (Math.random() > 0.92 && currentGrowth >= maxGrowth - 5) {
+                let exists = hearts.some(h => Math.abs(h.attachX - endX) < 1 && Math.abs(h.attachY - endY) < 1);
+                if (!exists) {
+                    hearts.push(new Heart(endX, endY, angle));
+                }
+            }
+            return;
+        }
+
+        // วาดกิ่งแยก (Layer)
+        drawBranch(endX, endY, len * 0.75, angle - 0.5, thickness * 0.7);
+        drawBranch(endX, endY, len * 0.75, angle + 0.5, thickness * 0.7);
+
+    }
+
+    function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // ค่อยๆ ให้ต้นไม้โต
+        if (currentGrowth < maxGrowth) {
+            currentGrowth += 0.4;
+        } else {
+            treeFullyGrown = true;
+        }
+
+        // วาดต้นไม้
+        drawBranch(canvas.width / 2, canvas.height - 40, currentGrowth, 0, 12)
+
+        // จัดการหัวใจ
+        for (let i = hearts.length - 1; i >= 0; i--) {
+            let h = hearts[i];
+            
+            // ถ้าต้นไม้โตเต็มที่แล้ว สุ่มให้ใบไม้ร่วง
+            if (treeFullyGrown && h.state === 'attached' && Math.random() > 0.99) {
+                h.state = 'falling';
+            }
+
+            h.update();
+            h.draw();
+
+            // ลบออกจาก Array เมื่อจางจนมองไม่เห็น
+            if (h.opacity <= 0) {
+                hearts.splice(i, 1);
+            }
+        }
+
+
+        if (currentGrowth >= maxGrowth) {
+    // --- ຮູບເບື້ອງຊ້າຍ (ທີ່ທ່ານມີຢູ່ແລ້ວ) ---
+    ctx.drawImage(img1, (canvas.width / 2) - 500, canvas.height / 2, 200, 200);
+
+    // --- ຮູບເບື້ອງຂວາ ---
+    ctx.drawImage(img2, (canvas.width / 2) + 300, canvas.height / 2, 200, 200);
+    }
+        
+
+        requestAnimationFrame(animate);
+        if (currentGrowth >= maxGrowth) { ctx.font = "bold 60px Arial"; ctx.fillStyle = "#ff3364"; ctx.textAlign = "center"; ctx.fillText("Happy Valentine's Day", canvas.width / 2, 100); }
+        if (currentGrowth >= maxGrowth) { ctx.font = "bold 20px Arial"; ctx.fillStyle = "#ff3364"; ctx.textAlign = "center"; ctx.fillText("ຮັກເບບທີ່ສຸດແລະຈະຮັກຕະຫຼອດໄປຂໍໃຫ້ເບບມີຄວາມສຸກຫຼາຍໆສຸກສັນວັນວາເລັນທາຍຍ່າງອນຫຼາຍເດີ້ອິອິ", canvas.width / 2, 180); }
+
+    }
+
+    
+
+    animate();
+
+    const img1 = new Image();
+img1.src = 'yyy.png'; // ຮູບເບື້ອງຊ້າຍ
+
+const img2 = new Image();
+img2.src = 'ooo.png'; // ຮູບເບື້ອງຂວາ
+
+
+    window.addEventListener('resize', () => {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        hearts = [];
+        currentGrowth = 0;
+        treeFullyGrown = false;
+    });
+</script>
+
+</body>
+</html>
